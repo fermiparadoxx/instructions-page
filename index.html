@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homebridge Setup and Restart Instructions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Homebridge Setup and Restart Instructions</h1>
+    <h2>Step 1: Edit the Launch Daemon</h2>
+    <pre><code>sudo nano /Library/LaunchDaemons/com.homebridge.server.plist</code></pre>
+    <p>Add the following content:</p>
+    <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+        <key>Label</key>
+        <string>com.homebridge.server</string>
+        <key>ProgramArguments</key>
+        <array>
+        <string>/usr/local/bin/node</string>
+        <string>/usr/local/lib/node_modules/homebridge-config-ui-x/dist/bin/hb-service.js</string>
+        <string>run</string>
+        <string>-I</string>
+        <string>-U</string>
+        <string>/Users/AuroraServer/.homebridge</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+        <key>StandardOutPath</key>
+        <string>/var/log/homebridge.log</string>
+        <key>StandardErrorPath</key>
+        <string>/var/log/homebridge.log</string>
+        </dict>
+        </plist>
+        </code></pre>
+        <h2>Step 2: Correct Permissions</h2>
+        <pre><code>sudo chown root
+        /Library/LaunchDaemons/com.homebridge.server.plist
+        sudo chmod 644 /Library/LaunchDaemons/com.homebridge.server.plist</code></pre>
+        <h2>Step 3: Load and Start the Daemon</h2>
+        <pre><code>sudo launchctl load /Library/LaunchDaemons/com.homebridge.server.plist
+        sudo launchctl start com.homebridge.server</code></pre>
+        <h2>Step 4: Create Python Script to Restart Homebridge</h2>
+        <pre><code>nano restart_homebridge.py</code></pre>
+        <p>Add the following content:</p>
+        <pre><code>import os
+        
+        def restart_homebridge():
+        os.system("sudo launchctl unload /Library/LaunchDaemons/com.homebridge.server.plist")
+        os.system("sudo launchctl load /Library/LaunchDaemons/com.homebridge.server.plist")
+        
+        if name == "main":
+        restart_homebridge()
+        </code></pre>
+        <h2>Step 5: Install Flask</h2>
+        <pre><code>pip install flask</code></pre>
+        <h2>Step 6: Create Flask App</h2>
+        <pre><code>nano flask_app.py</code></pre>
+        <p>Add the following content:</p>
+        <pre><code>from flask import Flask
+        import os
+        
+        app = Flask(name)
+        
+        def restart_homebridge():
+        os.system("sudo launchctl unload /Library/LaunchDaemons/com.homebridge.server.plist")
+        os.system("sudo launchctl load /Library/LaunchDaemons/com.homebridge.server.plist")
+        
+        @app.route('/restart', methods=['POST'])
+        def restart():
+        restart_homebridge()
+        return "Homebridge restarted."
+        
+        if name == "main":
+        app.run(host='0.0.0.0', port=5000)
+        </code></pre>
+        <h2>Step 7: Run the Flask App</h2>
+        <pre><code>sudo python flask_app.py</code></pre>
+        <h2>Step 8: Create Shortcut in iOS</h2>
+        <p>Create a new shortcut with the following actions:</p>
+        <ol>
+        <li>URL: <code>http://<your-ip-address>:5000/restart</code></li>
+        <li>Get Contents of URL (Set to POST)</li>
+        <li>Show Notification (Optional)</li>
+        </ol>
+        <p>Now you can restart Homebridge by saying "Restart Homebridge" to Siri.</p>
+        
+           </body>
+           </html>
+           ```
